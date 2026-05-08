@@ -1,17 +1,19 @@
 from pathlib import Path
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
-from fastapi.responses import FileResponse, RedirectResponse
+from fastapi.responses import FileResponse
 from fastapi.staticfiles import StaticFiles
 
+from app.db.database import init_db
 from app.api.matching import router as matching_router
+from app.api.records import router as records_router
 
 STATIC_DIR = Path(__file__).parent / "static"
 
 app = FastAPI(
     title="介護事業所マッチングAPI",
-    description="面接動画をAIで解析したテキストデータと希望条件から、適した介護事業所タイプを判定します。",
-    version="2.0.0",
+    description="Zoom録画 → NotebookLM テキスト → 事業所適性判定 → DB保存",
+    version="3.0.0",
 )
 
 app.add_middleware(
@@ -21,7 +23,14 @@ app.add_middleware(
     allow_headers=["*"],
 )
 
+
+@app.on_event("startup")
+def startup():
+    init_db()
+
+
 app.include_router(matching_router)
+app.include_router(records_router)
 app.mount("/static", StaticFiles(directory=str(STATIC_DIR)), name="static")
 
 

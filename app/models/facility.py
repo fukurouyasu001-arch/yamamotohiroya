@@ -1,3 +1,4 @@
+from typing import Optional
 from pydantic import BaseModel, Field
 from enum import Enum
 
@@ -31,6 +32,7 @@ class FacilityMatchResult(BaseModel):
 
 
 class MatchingResponse(BaseModel):
+    record_id: Optional[int] = Field(None, description="DB保存レコードID")
     candidate_name: str
     recommended_facilities: list[FacilityMatchResult]
     summary: str

@@ -6,193 +6,128 @@
   <title>介護事業所マッチング判定</title>
   <style>
     *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
-    body {
-      font-family: "Hiragino Sans", "Meiryo", sans-serif;
-      background: #f0f4f8;
-      color: #2d3748;
-      min-height: 100vh;
-    }
-    header {
-      background: #2b6cb0;
-      color: #fff;
-      padding: 20px 32px;
-      box-shadow: 0 2px 8px rgba(0,0,0,.15);
-    }
-    header h1 { font-size: 1.4rem; font-weight: 700; }
-    header p  { font-size: .85rem; opacity: .85; margin-top: 4px; }
+    body { font-family: "Hiragino Sans","Meiryo",sans-serif; background:#f0f4f8; color:#2d3748; min-height:100vh; }
 
-    main {
-      max-width: 860px;
-      margin: 32px auto;
-      padding: 0 16px 60px;
-    }
+    header { background:#2b6cb0; color:#fff; padding:18px 32px; box-shadow:0 2px 8px rgba(0,0,0,.15); }
+    header h1 { font-size:1.35rem; font-weight:700; }
+    header p  { font-size:.82rem; opacity:.85; margin-top:3px; }
 
-    /* カード共通 */
-    .card {
-      background: #fff;
-      border-radius: 12px;
-      padding: 28px 32px;
-      box-shadow: 0 1px 6px rgba(0,0,0,.08);
-      margin-bottom: 24px;
+    /* タブ */
+    .tabs { display:flex; gap:0; background:#1a4a80; padding:0 32px; }
+    .tab-btn {
+      padding:11px 28px; font-size:.9rem; font-weight:600; color:rgba(255,255,255,.7);
+      background:none; border:none; cursor:pointer; border-bottom:3px solid transparent;
+      transition:color .15s, border-color .15s;
     }
-    .card h2 {
-      font-size: 1rem;
-      font-weight: 700;
-      color: #2b6cb0;
-      border-left: 4px solid #2b6cb0;
-      padding-left: 10px;
-      margin-bottom: 20px;
-    }
+    .tab-btn.active { color:#fff; border-bottom-color:#63b3ed; }
+    .tab-btn:hover  { color:#fff; }
+
+    main { max-width:880px; margin:28px auto; padding:0 16px 60px; }
+    .tab-panel { display:none; }
+    .tab-panel.active { display:block; }
+
+    /* カード */
+    .card { background:#fff; border-radius:12px; padding:26px 30px; box-shadow:0 1px 6px rgba(0,0,0,.08); margin-bottom:22px; }
+    .card h2 { font-size:.97rem; font-weight:700; color:#2b6cb0; border-left:4px solid #2b6cb0; padding-left:10px; margin-bottom:18px; }
 
     /* フォーム */
-    .form-grid {
-      display: grid;
-      grid-template-columns: 1fr 1fr;
-      gap: 16px;
-    }
-    .form-group { display: flex; flex-direction: column; gap: 6px; }
-    .form-group.full { grid-column: 1 / -1; }
-    label { font-size: .82rem; font-weight: 600; color: #4a5568; }
-    input[type="text"], input[type="number"], select, textarea {
-      border: 1.5px solid #cbd5e0;
-      border-radius: 8px;
-      padding: 10px 12px;
-      font-size: .93rem;
-      font-family: inherit;
-      transition: border-color .2s;
-      background: #fff;
+    .form-grid { display:grid; grid-template-columns:1fr 1fr; gap:15px; }
+    .form-group { display:flex; flex-direction:column; gap:5px; }
+    .form-group.full { grid-column:1/-1; }
+    label { font-size:.8rem; font-weight:600; color:#4a5568; }
+    input[type=text], input[type=number], select, textarea {
+      border:1.5px solid #cbd5e0; border-radius:8px; padding:9px 11px;
+      font-size:.92rem; font-family:inherit; transition:border-color .2s;
     }
     input:focus, select:focus, textarea:focus {
-      outline: none;
-      border-color: #2b6cb0;
-      box-shadow: 0 0 0 3px rgba(43,108,176,.15);
+      outline:none; border-color:#2b6cb0; box-shadow:0 0 0 3px rgba(43,108,176,.15);
     }
-    textarea { resize: vertical; min-height: 140px; line-height: 1.6; }
+    textarea { resize:vertical; min-height:150px; line-height:1.65; }
+    .checkbox-group { display:flex; flex-wrap:wrap; gap:14px; margin-top:2px; }
+    .checkbox-group label { display:flex; align-items:center; gap:6px; font-weight:400; font-size:.88rem; cursor:pointer; }
+    .checkbox-group input[type=checkbox] { width:15px; height:15px; accent-color:#2b6cb0; }
 
-    /* チェックボックス群 */
-    .checkbox-group { display: flex; flex-wrap: wrap; gap: 12px; margin-top: 2px; }
-    .checkbox-group label {
-      display: flex; align-items: center; gap: 6px;
-      font-weight: 400; font-size: .9rem; cursor: pointer;
-    }
-    .checkbox-group input[type="checkbox"] { width: 16px; height: 16px; accent-color: #2b6cb0; }
+    .btn { padding:12px 22px; border-radius:9px; font-size:.93rem; font-weight:700; cursor:pointer; border:none; transition:background .18s, transform .1s; }
+    .btn:active { transform:scale(.98); }
+    .btn-primary { background:#2b6cb0; color:#fff; width:100%; margin-top:6px; }
+    .btn-primary:hover { background:#2c5282; }
+    .btn-primary:disabled { background:#a0aec0; cursor:not-allowed; }
+    .btn-danger { background:#e53e3e; color:#fff; font-size:.78rem; padding:5px 11px; border-radius:6px; }
+    .btn-danger:hover { background:#c53030; }
 
-    /* 送信ボタン */
-    .btn-submit {
-      display: block;
-      width: 100%;
-      padding: 14px;
-      background: #2b6cb0;
-      color: #fff;
-      border: none;
-      border-radius: 10px;
-      font-size: 1rem;
-      font-weight: 700;
-      cursor: pointer;
-      transition: background .2s, transform .1s;
-      margin-top: 8px;
-    }
-    .btn-submit:hover  { background: #2c5282; }
-    .btn-submit:active { transform: scale(.98); }
-    .btn-submit:disabled { background: #a0aec0; cursor: not-allowed; }
+    /* ローディング・エラー */
+    #loading { display:none; text-align:center; padding:28px; color:#718096; font-size:.93rem; }
+    .spinner { width:34px; height:34px; border:4px solid #e2e8f0; border-top-color:#2b6cb0; border-radius:50%; animation:spin .8s linear infinite; margin:0 auto 10px; }
+    @keyframes spin { to { transform:rotate(360deg); } }
+    .error-box { display:none; background:#fff5f5; border:1.5px solid #fc8181; border-radius:9px; padding:14px 18px; color:#c53030; font-size:.88rem; margin-bottom:20px; }
 
-    /* ローディング */
-    #loading {
-      display: none;
-      text-align: center;
-      padding: 32px;
-      color: #718096;
-      font-size: .95rem;
-    }
-    .spinner {
-      width: 36px; height: 36px;
-      border: 4px solid #e2e8f0;
-      border-top-color: #2b6cb0;
-      border-radius: 50%;
-      animation: spin .8s linear infinite;
-      margin: 0 auto 12px;
-    }
-    @keyframes spin { to { transform: rotate(360deg); } }
+    /* 判定結果 */
+    #result { display:none; }
+    .result-summary { background:#ebf8ff; border-left:5px solid #2b6cb0; padding:14px 18px; border-radius:8px; font-size:.93rem; line-height:1.7; margin-bottom:6px; }
+    .analysis-note { font-size:.8rem; color:#718096; margin-bottom:22px; }
+    .facility-list { display:flex; flex-direction:column; gap:13px; }
+    .facility-card { border:1.5px solid #e2e8f0; border-radius:10px; padding:16px 18px; transition:box-shadow .15s; }
+    .facility-card:hover { box-shadow:0 2px 10px rgba(0,0,0,.09); }
+    .facility-card.rank-1 { border-color:#f6ad55; background:#fffaf0; }
+    .facility-card.rank-2 { border-color:#a0aec0; background:#f9fafb; }
+    .facility-card.rank-3 { border-color:#b7791f; background:#fffff0; }
+    .fc-header { display:flex; align-items:center; gap:11px; margin-bottom:9px; }
+    .rank-badge { width:30px; height:30px; border-radius:50%; display:flex; align-items:center; justify-content:center; font-weight:800; font-size:.88rem; flex-shrink:0; }
+    .rank-1 .rank-badge { background:#f6ad55; color:#fff; }
+    .rank-2 .rank-badge { background:#a0aec0; color:#fff; }
+    .rank-3 .rank-badge { background:#b7791f; color:#fff; }
+    .rank-other .rank-badge { background:#e2e8f0; color:#718096; }
+    .fc-name { font-size:1rem; font-weight:700; flex:1; }
+    .score-bar-wrap { display:flex; align-items:center; gap:9px; }
+    .score-bar-bg { flex:1; height:9px; background:#e2e8f0; border-radius:5px; overflow:hidden; }
+    .score-bar-fill { height:100%; border-radius:5px; background:linear-gradient(90deg,#2b6cb0,#63b3ed); }
+    .score-label { font-size:.83rem; font-weight:700; color:#2b6cb0; min-width:40px; text-align:right; }
+    .fc-reasons ul { padding-left:18px; margin-top:8px; }
+    .fc-reasons li { font-size:.83rem; color:#4a5568; line-height:1.65; }
+    .fc-reasons li.caution { color:#c05621; }
+    .fc-reasons li.caution::marker { content:"⚠ "; }
 
-    /* エラー */
-    #error-box {
-      display: none;
-      background: #fff5f5;
-      border: 1.5px solid #fc8181;
-      border-radius: 10px;
-      padding: 16px 20px;
-      color: #c53030;
-      font-size: .9rem;
-      margin-bottom: 24px;
-    }
+    /* 履歴タブ */
+    .history-controls { display:flex; justify-content:space-between; align-items:center; margin-bottom:16px; }
+    .history-controls h3 { font-size:.95rem; font-weight:700; color:#4a5568; }
+    .btn-refresh { background:#edf2f7; color:#4a5568; padding:7px 14px; font-size:.82rem; border-radius:7px; }
+    .btn-refresh:hover { background:#e2e8f0; }
+    .record-table { width:100%; border-collapse:collapse; font-size:.85rem; }
+    .record-table th { background:#edf2f7; padding:10px 12px; text-align:left; font-weight:700; color:#4a5568; border-bottom:2px solid #cbd5e0; white-space:nowrap; }
+    .record-table td { padding:10px 12px; border-bottom:1px solid #e2e8f0; vertical-align:middle; }
+    .record-table tr:hover td { background:#f7fafc; }
+    .score-pill { display:inline-block; padding:2px 9px; border-radius:12px; font-weight:700; font-size:.8rem; }
+    .score-high  { background:#c6f6d5; color:#276749; }
+    .score-mid   { background:#fefcbf; color:#744210; }
+    .score-low   { background:#fed7d7; color:#9b2c2c; }
+    .no-records { text-align:center; padding:36px; color:#a0aec0; font-size:.92rem; }
 
-    /* 結果エリア */
-    #result { display: none; }
-    .result-summary {
-      background: #ebf8ff;
-      border-left: 5px solid #2b6cb0;
-      padding: 16px 20px;
-      border-radius: 8px;
-      font-size: .95rem;
-      line-height: 1.7;
-      margin-bottom: 8px;
-    }
-    .analysis-note {
-      font-size: .82rem;
-      color: #718096;
-      margin-bottom: 24px;
-    }
+    /* モーダル */
+    .modal-overlay { display:none; position:fixed; inset:0; background:rgba(0,0,0,.45); z-index:100; overflow-y:auto; padding:32px 16px; }
+    .modal-overlay.open { display:flex; align-items:flex-start; justify-content:center; }
+    .modal { background:#fff; border-radius:14px; max-width:740px; width:100%; padding:28px 30px; box-shadow:0 8px 32px rgba(0,0,0,.18); }
+    .modal-header { display:flex; justify-content:space-between; align-items:center; margin-bottom:20px; }
+    .modal-header h3 { font-size:1.05rem; font-weight:700; color:#2b6cb0; }
+    .modal-close { background:none; border:none; font-size:1.4rem; cursor:pointer; color:#a0aec0; line-height:1; }
+    .modal-close:hover { color:#4a5568; }
+    .detail-section { margin-bottom:18px; }
+    .detail-section h4 { font-size:.82rem; font-weight:700; color:#718096; text-transform:uppercase; letter-spacing:.04em; margin-bottom:8px; border-bottom:1px solid #e2e8f0; padding-bottom:5px; }
+    .detail-grid { display:grid; grid-template-columns:1fr 1fr; gap:8px 20px; font-size:.85rem; }
+    .detail-label { color:#718096; }
+    .detail-value { font-weight:600; }
+    .trait-bars { display:flex; flex-direction:column; gap:6px; }
+    .trait-row { display:flex; align-items:center; gap:10px; font-size:.82rem; }
+    .trait-name { width:110px; flex-shrink:0; color:#4a5568; }
+    .trait-bar-bg { flex:1; height:8px; background:#e2e8f0; border-radius:4px; overflow:hidden; }
+    .trait-bar-fill { height:100%; border-radius:4px; background:linear-gradient(90deg,#2b6cb0,#63b3ed); }
+    .trait-val { width:34px; text-align:right; font-weight:700; color:#2b6cb0; }
+    .interview-text-box { background:#f7fafc; border:1px solid #e2e8f0; border-radius:8px; padding:12px 14px; font-size:.83rem; line-height:1.7; max-height:180px; overflow-y:auto; white-space:pre-wrap; color:#4a5568; }
 
-    /* ランキングカード */
-    .facility-list { display: flex; flex-direction: column; gap: 14px; }
-    .facility-card {
-      border: 1.5px solid #e2e8f0;
-      border-radius: 10px;
-      padding: 18px 20px;
-      position: relative;
-      transition: box-shadow .15s;
-    }
-    .facility-card:hover { box-shadow: 0 2px 12px rgba(0,0,0,.1); }
-    .facility-card.rank-1 { border-color: #f6ad55; background: #fffaf0; }
-    .facility-card.rank-2 { border-color: #a0aec0; background: #f9fafb; }
-    .facility-card.rank-3 { border-color: #b7791f; background: #fffff0; }
-
-    .fc-header { display: flex; align-items: center; gap: 12px; margin-bottom: 10px; }
-    .rank-badge {
-      width: 32px; height: 32px;
-      border-radius: 50%;
-      display: flex; align-items: center; justify-content: center;
-      font-weight: 800; font-size: .9rem;
-      flex-shrink: 0;
-    }
-    .rank-1 .rank-badge { background: #f6ad55; color: #fff; }
-    .rank-2 .rank-badge { background: #a0aec0; color: #fff; }
-    .rank-3 .rank-badge { background: #b7791f; color: #fff; }
-    .rank-other .rank-badge { background: #e2e8f0; color: #718096; }
-
-    .fc-name { font-size: 1.05rem; font-weight: 700; flex: 1; }
-    .score-bar-wrap { display: flex; align-items: center; gap: 10px; }
-    .score-bar-bg {
-      flex: 1; height: 10px; background: #e2e8f0;
-      border-radius: 5px; overflow: hidden;
-    }
-    .score-bar-fill {
-      height: 100%; border-radius: 5px;
-      background: linear-gradient(90deg, #2b6cb0, #63b3ed);
-      transition: width .6s ease;
-    }
-    .score-label { font-size: .85rem; font-weight: 700; color: #2b6cb0; min-width: 44px; text-align: right; }
-
-    .fc-reasons { margin-top: 10px; }
-    .fc-reasons ul { padding-left: 20px; }
-    .fc-reasons li { font-size: .85rem; color: #4a5568; line-height: 1.7; }
-    .fc-reasons li.caution { color: #c05621; }
-    .fc-reasons li.caution::marker { content: "⚠ "; }
-
-    /* レスポンシブ */
-    @media (max-width: 600px) {
-      .form-grid { grid-template-columns: 1fr; }
-      .card { padding: 20px 16px; }
+    @media (max-width:600px) {
+      .form-grid { grid-template-columns:1fr; }
+      .card { padding:18px 14px; }
+      .modal { padding:20px 16px; }
+      .detail-grid { grid-template-columns:1fr; }
     }
   </style>
 </head>
@@ -200,200 +135,293 @@
 
 <header>
   <h1>介護事業所マッチング判定</h1>
-  <p>面接AI解析テキストと希望条件から、適した介護事業所タイプを判定します</p>
+  <p>Zoom録画 → NotebookLM テキスト → 適性判定 → DB保存</p>
 </header>
+
+<div class="tabs">
+  <button class="tab-btn active" onclick="switchTab('judge')">判定</button>
+  <button class="tab-btn" onclick="switchTab('history')">判定履歴</button>
+</div>
 
 <main>
 
-  <!-- 入力フォーム -->
-  <div class="card">
-    <h2>応募者情報・希望条件</h2>
-    <form id="matchForm">
-      <div class="form-grid">
-
-        <div class="form-group">
-          <label for="name">氏名</label>
-          <input type="text" id="name" placeholder="例：山田 花子" required>
-        </div>
-
-        <div class="form-group">
-          <label for="workStyle">雇用形態</label>
-          <select id="workStyle">
-            <option value="full_time">正社員</option>
-            <option value="part_time">パート・アルバイト</option>
-            <option value="contract">契約社員</option>
-            <option value="dispatch">派遣</option>
-          </select>
-        </div>
-
-        <div class="form-group">
-          <label for="shiftPref">希望シフト・時間帯</label>
-          <select id="shiftPref">
-            <option value="day">日勤のみ</option>
-            <option value="night">夜勤あり</option>
-            <option value="evening">夕方・夜</option>
-            <option value="flexible">柔軟に対応</option>
-          </select>
-        </div>
-
-        <div class="form-group">
-          <label for="hoursPerWeek">希望週労働時間（時間）</label>
-          <input type="number" id="hoursPerWeek" min="1" max="60" placeholder="例：40">
-        </div>
-
-        <div class="form-group full">
-          <label>保有資格</label>
-          <div class="checkbox-group">
-            <label><input type="checkbox" id="licCareWorker"> 介護福祉士</label>
-            <label><input type="checkbox" id="licCareManager"> ケアマネジャー</label>
-            <label><input type="checkbox" id="licSocialWorker"> 社会福祉士</label>
+  <!-- ── 判定タブ ── -->
+  <div id="tab-judge" class="tab-panel active">
+    <div class="card">
+      <h2>応募者情報・希望条件</h2>
+      <form id="matchForm">
+        <div class="form-grid">
+          <div class="form-group">
+            <label>氏名</label>
+            <input type="text" id="name" placeholder="例：山田 花子" required>
+          </div>
+          <div class="form-group">
+            <label>雇用形態</label>
+            <select id="workStyle">
+              <option value="full_time">正社員</option>
+              <option value="part_time">パート・アルバイト</option>
+              <option value="contract">契約社員</option>
+              <option value="dispatch">派遣</option>
+            </select>
+          </div>
+          <div class="form-group">
+            <label>希望シフト・時間帯</label>
+            <select id="shiftPref">
+              <option value="day">日勤のみ</option>
+              <option value="night">夜勤あり</option>
+              <option value="evening">夕方・夜</option>
+              <option value="flexible">柔軟に対応</option>
+            </select>
+          </div>
+          <div class="form-group">
+            <label>希望週労働時間（時間）</label>
+            <input type="number" id="hoursPerWeek" min="1" max="60" placeholder="例：40">
+          </div>
+          <div class="form-group full">
+            <label>保有資格</label>
+            <div class="checkbox-group">
+              <label><input type="checkbox" id="licCare"> 介護福祉士</label>
+              <label><input type="checkbox" id="licCM"> ケアマネジャー</label>
+              <label><input type="checkbox" id="licSW"> 社会福祉士</label>
+            </div>
+          </div>
+          <div class="form-group full">
+            <label>NotebookLM 出力テキスト（Zoom面接のAI解析結果）</label>
+            <textarea id="interviewText"
+              placeholder="NotebookLMで整形した面接テキストをここに貼り付けてください。&#10;&#10;例）&#10;## 面接サマリー&#10;- 穏やかで落ち着いた話し方。認知症ケアへの関心が強く語られた。&#10;- 夜勤も前向きに検討可能と発言。&#10;- 介護5年の経験あり。共感力・傾聴姿勢が際立っていた。" required></textarea>
           </div>
         </div>
+        <button type="submit" class="btn btn-primary" id="submitBtn">事業所適性を判定する</button>
+      </form>
+    </div>
 
-        <div class="form-group full">
-          <label for="interviewText">面接AI解析テキスト</label>
-          <textarea id="interviewText"
-            placeholder="面接動画をAIで解析して得られたテキストを貼り付けてください。&#10;例）穏やかで落ち着いた印象。認知症への関心を語り、夜勤も積極的に対応可能と発言。共感力・傾聴姿勢が高評価。介護5年の経験あり…"
-            required></textarea>
-        </div>
+    <div id="loading"><div class="spinner"></div>解析・マッチング処理中…</div>
+    <div id="errorBox" class="error-box"></div>
 
+    <div id="result">
+      <div class="card">
+        <h2>判定結果</h2>
+        <div class="result-summary" id="summaryText"></div>
+        <div class="analysis-note" id="analysisNote"></div>
+        <div class="facility-list" id="facilityList"></div>
       </div>
-      <button type="submit" class="btn-submit" id="submitBtn">事業所適性を判定する</button>
-    </form>
+    </div>
   </div>
 
-  <!-- ローディング -->
-  <div id="loading">
-    <div class="spinner"></div>
-    解析・マッチング処理中…
-  </div>
-
-  <!-- エラー -->
-  <div id="error-box"></div>
-
-  <!-- 結果 -->
-  <div id="result">
+  <!-- ── 履歴タブ ── -->
+  <div id="tab-history" class="tab-panel">
     <div class="card">
-      <h2>判定結果</h2>
-      <div class="result-summary" id="summaryText"></div>
-      <div class="analysis-note" id="analysisNote"></div>
-      <div class="facility-list" id="facilityList"></div>
+      <div class="history-controls">
+        <h3>判定履歴一覧</h3>
+        <button class="btn btn-refresh" onclick="loadHistory()">更新</button>
+      </div>
+      <div id="historyContent">
+        <div class="no-records">読み込み中…</div>
+      </div>
     </div>
   </div>
 
 </main>
 
+<!-- 詳細モーダル -->
+<div class="modal-overlay" id="detailModal" onclick="closeModal(event)">
+  <div class="modal">
+    <div class="modal-header">
+      <h3 id="modalTitle">判定詳細</h3>
+      <button class="modal-close" onclick="closeModalDirect()">×</button>
+    </div>
+    <div id="modalBody"></div>
+  </div>
+</div>
+
 <script>
-const API_BASE = "";   // 同一オリジン
+// ── タブ切り替え ──
+function switchTab(name) {
+  document.querySelectorAll(".tab-panel").forEach(p => p.classList.remove("active"));
+  document.querySelectorAll(".tab-btn").forEach(b => b.classList.remove("active"));
+  document.getElementById("tab-" + name).classList.add("active");
+  event.target.classList.add("active");
+  if (name === "history") loadHistory();
+}
 
-document.getElementById("matchForm").addEventListener("submit", async (e) => {
+// ── 判定フォーム送信 ──
+document.getElementById("matchForm").addEventListener("submit", async e => {
   e.preventDefault();
-  await runMatching();
-});
-
-async function runMatching() {
-  const name        = document.getElementById("name").value.trim();
-  const workStyle   = document.getElementById("workStyle").value;
-  const shiftPref   = document.getElementById("shiftPref").value;
-  const hoursRaw    = document.getElementById("hoursPerWeek").value;
-  const text        = document.getElementById("interviewText").value.trim();
-
+  const name = document.getElementById("name").value.trim();
+  const text = document.getElementById("interviewText").value.trim();
   if (!name || !text) return;
 
   const body = {
     candidate: {
       name,
-      work_style: workStyle,
-      shift_preference: shiftPref,
-      has_care_worker_license:  document.getElementById("licCareWorker").checked,
-      has_care_manager_license: document.getElementById("licCareManager").checked,
-      has_social_worker_license:document.getElementById("licSocialWorker").checked,
+      work_style: document.getElementById("workStyle").value,
+      shift_preference: document.getElementById("shiftPref").value,
+      has_care_worker_license:  document.getElementById("licCare").checked,
+      has_care_manager_license: document.getElementById("licCM").checked,
+      has_social_worker_license:document.getElementById("licSW").checked,
     },
     interview_text: text,
   };
-  if (hoursRaw) body.candidate.preferred_hours_per_week = Number(hoursRaw);
+  const h = document.getElementById("hoursPerWeek").value;
+  if (h) body.candidate.preferred_hours_per_week = Number(h);
 
-  setLoading(true);
-  hideError();
-  hideResult();
-
+  setLoading(true); hideError(); hideResult();
   try {
-    const res = await fetch(`${API_BASE}/matching/`, {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify(body),
-    });
-    if (!res.ok) {
-      const err = await res.json().catch(() => ({}));
-      throw new Error(err.detail || `HTTP ${res.status}`);
-    }
-    const data = await res.json();
-    renderResult(data);
-  } catch (err) {
-    showError(err.message);
-  } finally {
-    setLoading(false);
-  }
-}
+    const res = await fetch("/matching/", { method:"POST", headers:{"Content-Type":"application/json"}, body:JSON.stringify(body) });
+    if (!res.ok) { const e = await res.json().catch(()=>({})); throw new Error(e.detail || `HTTP ${res.status}`); }
+    renderResult(await res.json());
+  } catch(e) { showError(e.message); }
+  finally    { setLoading(false); }
+});
 
+// ── 結果描画 ──
 function renderResult(data) {
   document.getElementById("summaryText").textContent = data.summary;
-  document.getElementById("analysisNote").textContent = data.analysis_notes;
-
+  const note = data.analysis_notes + (data.record_id ? `　（保存ID: #${data.record_id}）` : "");
+  document.getElementById("analysisNote").textContent = note;
   const list = document.getElementById("facilityList");
   list.innerHTML = "";
-
-  data.recommended_facilities.forEach((f) => {
+  data.recommended_facilities.forEach(f => {
     const rankClass = f.rank <= 3 ? `rank-${f.rank}` : "rank-other";
     const card = document.createElement("div");
     card.className = `facility-card ${rankClass}`;
-
-    const reasonsHtml = f.reasons.map(r =>
-      `<li>${escHtml(r)}</li>`
-    ).join("");
-    const cautionsHtml = f.cautions.map(c =>
-      `<li class="caution">${escHtml(c)}</li>`
-    ).join("");
-
+    const reasons = f.reasons.map(r => `<li>${esc(r)}</li>`).join("");
+    const cautions = f.cautions.map(c => `<li class="caution">${esc(c)}</li>`).join("");
     card.innerHTML = `
       <div class="fc-header">
         <div class="rank-badge">${f.rank}</div>
-        <div class="fc-name">${escHtml(f.label)}</div>
+        <div class="fc-name">${esc(f.label)}</div>
       </div>
       <div class="score-bar-wrap">
-        <div class="score-bar-bg">
-          <div class="score-bar-fill" style="width:${f.score}%"></div>
-        </div>
+        <div class="score-bar-bg"><div class="score-bar-fill" style="width:${f.score}%"></div></div>
         <div class="score-label">${f.score}点</div>
       </div>
-      <div class="fc-reasons">
-        <ul>
-          ${reasonsHtml}
-          ${cautionsHtml}
-        </ul>
-      </div>
-    `;
+      <div class="fc-reasons"><ul>${reasons}${cautions}</ul></div>`;
     list.appendChild(card);
   });
-
   document.getElementById("result").style.display = "block";
-  document.getElementById("result").scrollIntoView({ behavior: "smooth" });
+  document.getElementById("result").scrollIntoView({ behavior:"smooth" });
 }
 
-function setLoading(on) {
-  document.getElementById("loading").style.display = on ? "block" : "none";
-  document.getElementById("submitBtn").disabled = on;
+// ── 履歴一覧読み込み ──
+async function loadHistory() {
+  document.getElementById("historyContent").innerHTML = '<div class="no-records">読み込み中…</div>';
+  try {
+    const res = await fetch("/records/?limit=100");
+    const data = await res.json();
+    renderHistory(data);
+  } catch(e) {
+    document.getElementById("historyContent").innerHTML = `<div class="no-records">読み込み失敗: ${e.message}</div>`;
+  }
 }
-function showError(msg) {
-  const el = document.getElementById("error-box");
-  el.textContent = `エラー: ${msg}`;
-  el.style.display = "block";
+
+function renderHistory(data) {
+  if (!data.records.length) {
+    document.getElementById("historyContent").innerHTML = '<div class="no-records">判定履歴がありません</div>';
+    return;
+  }
+  const shiftLabel = { day:"日勤", night:"夜勤あり", evening:"夕方・夜", flexible:"柔軟" };
+  const wsLabel    = { full_time:"正社員", part_time:"パート", contract:"契約", dispatch:"派遣" };
+  const rows = data.records.map(r => {
+    const d = new Date(r.created_at);
+    const dt = `${d.getFullYear()}/${String(d.getMonth()+1).padStart(2,"0")}/${String(d.getDate()).padStart(2,"0")} ${String(d.getHours()).padStart(2,"0")}:${String(d.getMinutes()).padStart(2,"0")}`;
+    const pillClass = r.top_score >= 70 ? "score-high" : r.top_score >= 50 ? "score-mid" : "score-low";
+    return `<tr>
+      <td>${r.id}</td>
+      <td>${dt}</td>
+      <td><strong>${esc(r.candidate_name)}</strong></td>
+      <td>${wsLabel[r.work_style] || r.work_style}</td>
+      <td>${shiftLabel[r.shift_preference] || r.shift_preference}</td>
+      <td>${esc(r.top_facility_label)}</td>
+      <td><span class="score-pill ${pillClass}">${r.top_score}点</span></td>
+      <td>
+        <button class="btn btn-primary" style="width:auto;margin:0;padding:5px 12px;font-size:.78rem;" onclick="openDetail(${r.id})">詳細</button>
+        &nbsp;
+        <button class="btn btn-danger" onclick="deleteRecord(${r.id})">削除</button>
+      </td>
+    </tr>`;
+  }).join("");
+  document.getElementById("historyContent").innerHTML = `
+    <table class="record-table">
+      <thead><tr><th>ID</th><th>判定日時</th><th>氏名</th><th>雇用形態</th><th>シフト</th><th>最適事業所</th><th>スコア</th><th>操作</th></tr></thead>
+      <tbody>${rows}</tbody>
+    </table>`;
 }
-function hideError() { document.getElementById("error-box").style.display = "none"; }
+
+// ── 詳細モーダル ──
+async function openDetail(id) {
+  document.getElementById("modalBody").innerHTML = '<div style="text-align:center;padding:24px;color:#a0aec0">読み込み中…</div>';
+  document.getElementById("detailModal").classList.add("open");
+  try {
+    const res = await fetch(`/records/${id}`);
+    if (!res.ok) throw new Error("取得失敗");
+    const d = await res.json();
+    document.getElementById("modalTitle").textContent = `${esc(d.candidate_name)} さんの判定詳細（#${d.id}）`;
+    const shiftLabel = { day:"日勤のみ", night:"夜勤あり", evening:"夕方・夜", flexible:"柔軟" };
+    const wsLabel    = { full_time:"正社員", part_time:"パート・アルバイト", contract:"契約社員", dispatch:"派遣" };
+    const traitLabels = { calm:"穏やかさ", empathy:"共感力", energy:"活動性", focus:"集中力", adaptability:"柔軟性", communication:"コミュニケーション力" };
+    const traitBars = Object.entries(d.trait_profile).map(([k,v]) =>
+      `<div class="trait-row">
+        <div class="trait-name">${traitLabels[k]||k}</div>
+        <div class="trait-bar-bg"><div class="trait-bar-fill" style="width:${(v*100).toFixed(0)}%"></div></div>
+        <div class="trait-val">${(v*100).toFixed(0)}</div>
+       </div>`).join("");
+    const top3 = d.facility_rankings.slice(0,3).map((f,i) =>
+      `<span style="margin-right:8px"><strong>${i+1}.</strong> ${esc(f.label)} <span style="color:#2b6cb0;font-weight:700">${f.score}点</span></span>`
+    ).join("");
+    const licenses = [d.has_care_worker_license&&"介護福祉士", d.has_care_manager_license&&"ケアマネジャー", d.has_social_worker_license&&"社会福祉士"].filter(Boolean).join(" / ") || "なし";
+    document.getElementById("modalBody").innerHTML = `
+      <div class="detail-section">
+        <h4>基本情報</h4>
+        <div class="detail-grid">
+          <div><div class="detail-label">氏名</div><div class="detail-value">${esc(d.candidate_name)}</div></div>
+          <div><div class="detail-label">判定日時</div><div class="detail-value">${new Date(d.created_at).toLocaleString("ja-JP")}</div></div>
+          <div><div class="detail-label">雇用形態</div><div class="detail-value">${wsLabel[d.work_style]||d.work_style}</div></div>
+          <div><div class="detail-label">希望シフト</div><div class="detail-value">${shiftLabel[d.shift_preference]||d.shift_preference}</div></div>
+          <div><div class="detail-label">保有資格</div><div class="detail-value">${licenses}</div></div>
+          <div><div class="detail-label">解析信頼度</div><div class="detail-value">${(d.analysis_confidence*100).toFixed(0)}%</div></div>
+        </div>
+      </div>
+      <div class="detail-section">
+        <h4>特性スコア</h4>
+        <div class="trait-bars">${traitBars}</div>
+      </div>
+      <div class="detail-section">
+        <h4>事業所ランキング（上位3件）</h4>
+        <div style="font-size:.88rem;line-height:2">${top3}</div>
+      </div>
+      <div class="detail-section">
+        <h4>判定サマリー</h4>
+        <div style="font-size:.88rem;line-height:1.7;color:#4a5568">${esc(d.summary)}</div>
+      </div>
+      <div class="detail-section">
+        <h4>面接テキスト（前処理済み）</h4>
+        <div class="interview-text-box">${esc(d.interview_text)}</div>
+      </div>`;
+  } catch(e) {
+    document.getElementById("modalBody").innerHTML = `<div style="color:#c53030">読み込みエラー: ${e.message}</div>`;
+  }
+}
+
+function closeModal(e) { if (e.target === document.getElementById("detailModal")) closeModalDirect(); }
+function closeModalDirect() { document.getElementById("detailModal").classList.remove("open"); }
+
+// ── レコード削除 ──
+async function deleteRecord(id) {
+  if (!confirm(`ID #${id} の判定データを削除しますか？`)) return;
+  try {
+    const res = await fetch(`/records/${id}`, { method:"DELETE" });
+    if (!res.ok && res.status !== 204) throw new Error("削除失敗");
+    loadHistory();
+  } catch(e) { alert(`削除エラー: ${e.message}`); }
+}
+
+// ── ユーティリティ ──
+function setLoading(on) { document.getElementById("loading").style.display = on ? "block" : "none"; document.getElementById("submitBtn").disabled = on; }
+function showError(msg) { const el = document.getElementById("errorBox"); el.textContent = `エラー: ${msg}`; el.style.display = "block"; }
+function hideError() { document.getElementById("errorBox").style.display = "none"; }
 function hideResult() { document.getElementById("result").style.display = "none"; }
-function escHtml(s) {
-  return s.replace(/&/g,"&amp;").replace(/</g,"&lt;").replace(/>/g,"&gt;");
-}
+function esc(s) { return String(s).replace(/&/g,"&amp;").replace(/</g,"&lt;").replace(/>/g,"&gt;"); }
 </script>
 </body>
 </html>
