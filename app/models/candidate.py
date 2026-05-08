@@ -17,8 +17,8 @@ class ShiftPreference(str, Enum):
     FLEXIBLE = "flexible"         # 柔軟
 
 
-class EmotionProfile(BaseModel):
-    """面接動画の感情解析結果"""
+class TraitProfile(BaseModel):
+    """テキスト解析から導出した応募者の特性スコア"""
     calm: float = Field(ge=0.0, le=1.0, description="穏やかさ・安定性")
     empathy: float = Field(ge=0.0, le=1.0, description="共感力・温かさ")
     energy: float = Field(ge=0.0, le=1.0, description="活動性・明るさ")
@@ -27,22 +27,21 @@ class EmotionProfile(BaseModel):
     communication: float = Field(ge=0.0, le=1.0, description="コミュニケーション力")
 
 
-class SpeechProfile(BaseModel):
-    """発話内容の解析結果（Whisper + NLP）"""
-    transcript: str = Field(description="発話テキスト全文")
+class TextFeatures(BaseModel):
+    """テキストから抽出した介護分野の特性フラグ"""
     keywords: list[str] = Field(default_factory=list, description="抽出キーワード")
-    experience_years: Optional[int] = Field(None, description="経験年数（発話から推定）")
-    mentioned_night_shift: bool = Field(False, description="夜勤可と発言したか")
-    mentioned_physical_care: bool = Field(False, description="身体介護に言及したか")
+    experience_years: Optional[int] = Field(None, description="経験年数（テキストから推定）")
+    mentioned_night_shift: bool = Field(False, description="夜勤可への言及")
+    mentioned_physical_care: bool = Field(False, description="身体介護への言及")
     mentioned_dementia: bool = Field(False, description="認知症ケアへの言及")
     mentioned_disability: bool = Field(False, description="障害福祉への言及")
     mentioned_group_living: bool = Field(False, description="共同生活・グループへの言及")
     mentioned_activity: bool = Field(False, description="レクリエーション・活動への言及")
-    confidence_score: float = Field(ge=0.0, le=1.0, description="発話の自信度")
+    confidence_score: float = Field(ge=0.0, le=1.0, description="テキストから読み取れる自信度")
 
 
-class CandidateInput(BaseModel):
-    """応募者の希望条件（フォーム入力）"""
+class CandidateConditions(BaseModel):
+    """応募者の希望条件"""
     name: str
     work_style: WorkStyle
     shift_preference: ShiftPreference
@@ -54,15 +53,22 @@ class CandidateInput(BaseModel):
     notes: Optional[str] = None
 
 
-class VideoAnalysisResult(BaseModel):
-    """動画AI解析の統合結果"""
-    emotion: EmotionProfile
-    speech: SpeechProfile
-    video_duration_seconds: float
+class TextAnalysisResult(BaseModel):
+    """テキスト解析の統合結果"""
+    trait: TraitProfile
+    features: TextFeatures
     analysis_confidence: float = Field(ge=0.0, le=1.0)
 
 
+class InterviewTextRequest(BaseModel):
+    """APIリクエスト: 面接AIテキスト + 希望条件"""
+    candidate: CandidateConditions
+    interview_text: str = Field(
+        description="面接動画をAIで解析して得られたテキストデータ"
+    )
+
+
 class CandidateProfile(BaseModel):
-    """応募者の総合プロファイル"""
-    candidate: CandidateInput
-    video_analysis: VideoAnalysisResult
+    """マッチングエンジン用の統合プロファイル（内部モデル）"""
+    candidate: CandidateConditions
+    analysis: TextAnalysisResult

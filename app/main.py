@@ -1,13 +1,12 @@
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 
-from app.api.interview import router as interview_router
 from app.api.matching import router as matching_router
 
 app = FastAPI(
     title="介護事業所マッチングAPI",
-    description="面接動画のAI解析結果をもとに、応募者に適した介護事業所タイプを判定します。",
-    version="1.0.0",
+    description="面接動画をAIで解析したテキストデータと希望条件から、適した介護事業所タイプを判定します。",
+    version="2.0.0",
 )
 
 app.add_middleware(
@@ -17,7 +16,6 @@ app.add_middleware(
     allow_headers=["*"],
 )
 
-app.include_router(interview_router)
 app.include_router(matching_router)
 
 
