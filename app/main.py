@@ -1,7 +1,12 @@
+from pathlib import Path
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
+from fastapi.responses import FileResponse, RedirectResponse
+from fastapi.staticfiles import StaticFiles
 
 from app.api.matching import router as matching_router
+
+STATIC_DIR = Path(__file__).parent / "static"
 
 app = FastAPI(
     title="介護事業所マッチングAPI",
@@ -17,6 +22,12 @@ app.add_middleware(
 )
 
 app.include_router(matching_router)
+app.mount("/static", StaticFiles(directory=str(STATIC_DIR)), name="static")
+
+
+@app.get("/", include_in_schema=False)
+def root():
+    return FileResponse(str(STATIC_DIR / "index.html"))
 
 
 @app.get("/health")

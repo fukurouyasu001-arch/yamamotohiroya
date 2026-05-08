@@ -1,0 +1,399 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>介護事業所マッチング判定</title>
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+    body {
+      font-family: "Hiragino Sans", "Meiryo", sans-serif;
+      background: #f0f4f8;
+      color: #2d3748;
+      min-height: 100vh;
+    }
+    header {
+      background: #2b6cb0;
+      color: #fff;
+      padding: 20px 32px;
+      box-shadow: 0 2px 8px rgba(0,0,0,.15);
+    }
+    header h1 { font-size: 1.4rem; font-weight: 700; }
+    header p  { font-size: .85rem; opacity: .85; margin-top: 4px; }
+
+    main {
+      max-width: 860px;
+      margin: 32px auto;
+      padding: 0 16px 60px;
+    }
+
+    /* カード共通 */
+    .card {
+      background: #fff;
+      border-radius: 12px;
+      padding: 28px 32px;
+      box-shadow: 0 1px 6px rgba(0,0,0,.08);
+      margin-bottom: 24px;
+    }
+    .card h2 {
+      font-size: 1rem;
+      font-weight: 700;
+      color: #2b6cb0;
+      border-left: 4px solid #2b6cb0;
+      padding-left: 10px;
+      margin-bottom: 20px;
+    }
+
+    /* フォーム */
+    .form-grid {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 16px;
+    }
+    .form-group { display: flex; flex-direction: column; gap: 6px; }
+    .form-group.full { grid-column: 1 / -1; }
+    label { font-size: .82rem; font-weight: 600; color: #4a5568; }
+    input[type="text"], input[type="number"], select, textarea {
+      border: 1.5px solid #cbd5e0;
+      border-radius: 8px;
+      padding: 10px 12px;
+      font-size: .93rem;
+      font-family: inherit;
+      transition: border-color .2s;
+      background: #fff;
+    }
+    input:focus, select:focus, textarea:focus {
+      outline: none;
+      border-color: #2b6cb0;
+      box-shadow: 0 0 0 3px rgba(43,108,176,.15);
+    }
+    textarea { resize: vertical; min-height: 140px; line-height: 1.6; }
+
+    /* チェックボックス群 */
+    .checkbox-group { display: flex; flex-wrap: wrap; gap: 12px; margin-top: 2px; }
+    .checkbox-group label {
+      display: flex; align-items: center; gap: 6px;
+      font-weight: 400; font-size: .9rem; cursor: pointer;
+    }
+    .checkbox-group input[type="checkbox"] { width: 16px; height: 16px; accent-color: #2b6cb0; }
+
+    /* 送信ボタン */
+    .btn-submit {
+      display: block;
+      width: 100%;
+      padding: 14px;
+      background: #2b6cb0;
+      color: #fff;
+      border: none;
+      border-radius: 10px;
+      font-size: 1rem;
+      font-weight: 700;
+      cursor: pointer;
+      transition: background .2s, transform .1s;
+      margin-top: 8px;
+    }
+    .btn-submit:hover  { background: #2c5282; }
+    .btn-submit:active { transform: scale(.98); }
+    .btn-submit:disabled { background: #a0aec0; cursor: not-allowed; }
+
+    /* ローディング */
+    #loading {
+      display: none;
+      text-align: center;
+      padding: 32px;
+      color: #718096;
+      font-size: .95rem;
+    }
+    .spinner {
+      width: 36px; height: 36px;
+      border: 4px solid #e2e8f0;
+      border-top-color: #2b6cb0;
+      border-radius: 50%;
+      animation: spin .8s linear infinite;
+      margin: 0 auto 12px;
+    }
+    @keyframes spin { to { transform: rotate(360deg); } }
+
+    /* エラー */
+    #error-box {
+      display: none;
+      background: #fff5f5;
+      border: 1.5px solid #fc8181;
+      border-radius: 10px;
+      padding: 16px 20px;
+      color: #c53030;
+      font-size: .9rem;
+      margin-bottom: 24px;
+    }
+
+    /* 結果エリア */
+    #result { display: none; }
+    .result-summary {
+      background: #ebf8ff;
+      border-left: 5px solid #2b6cb0;
+      padding: 16px 20px;
+      border-radius: 8px;
+      font-size: .95rem;
+      line-height: 1.7;
+      margin-bottom: 8px;
+    }
+    .analysis-note {
+      font-size: .82rem;
+      color: #718096;
+      margin-bottom: 24px;
+    }
+
+    /* ランキングカード */
+    .facility-list { display: flex; flex-direction: column; gap: 14px; }
+    .facility-card {
+      border: 1.5px solid #e2e8f0;
+      border-radius: 10px;
+      padding: 18px 20px;
+      position: relative;
+      transition: box-shadow .15s;
+    }
+    .facility-card:hover { box-shadow: 0 2px 12px rgba(0,0,0,.1); }
+    .facility-card.rank-1 { border-color: #f6ad55; background: #fffaf0; }
+    .facility-card.rank-2 { border-color: #a0aec0; background: #f9fafb; }
+    .facility-card.rank-3 { border-color: #b7791f; background: #fffff0; }
+
+    .fc-header { display: flex; align-items: center; gap: 12px; margin-bottom: 10px; }
+    .rank-badge {
+      width: 32px; height: 32px;
+      border-radius: 50%;
+      display: flex; align-items: center; justify-content: center;
+      font-weight: 800; font-size: .9rem;
+      flex-shrink: 0;
+    }
+    .rank-1 .rank-badge { background: #f6ad55; color: #fff; }
+    .rank-2 .rank-badge { background: #a0aec0; color: #fff; }
+    .rank-3 .rank-badge { background: #b7791f; color: #fff; }
+    .rank-other .rank-badge { background: #e2e8f0; color: #718096; }
+
+    .fc-name { font-size: 1.05rem; font-weight: 700; flex: 1; }
+    .score-bar-wrap { display: flex; align-items: center; gap: 10px; }
+    .score-bar-bg {
+      flex: 1; height: 10px; background: #e2e8f0;
+      border-radius: 5px; overflow: hidden;
+    }
+    .score-bar-fill {
+      height: 100%; border-radius: 5px;
+      background: linear-gradient(90deg, #2b6cb0, #63b3ed);
+      transition: width .6s ease;
+    }
+    .score-label { font-size: .85rem; font-weight: 700; color: #2b6cb0; min-width: 44px; text-align: right; }
+
+    .fc-reasons { margin-top: 10px; }
+    .fc-reasons ul { padding-left: 20px; }
+    .fc-reasons li { font-size: .85rem; color: #4a5568; line-height: 1.7; }
+    .fc-reasons li.caution { color: #c05621; }
+    .fc-reasons li.caution::marker { content: "⚠ "; }
+
+    /* レスポンシブ */
+    @media (max-width: 600px) {
+      .form-grid { grid-template-columns: 1fr; }
+      .card { padding: 20px 16px; }
+    }
+  </style>
+</head>
+<body>
+
+<header>
+  <h1>介護事業所マッチング判定</h1>
+  <p>面接AI解析テキストと希望条件から、適した介護事業所タイプを判定します</p>
+</header>
+
+<main>
+
+  <!-- 入力フォーム -->
+  <div class="card">
+    <h2>応募者情報・希望条件</h2>
+    <form id="matchForm">
+      <div class="form-grid">
+
+        <div class="form-group">
+          <label for="name">氏名</label>
+          <input type="text" id="name" placeholder="例：山田 花子" required>
+        </div>
+
+        <div class="form-group">
+          <label for="workStyle">雇用形態</label>
+          <select id="workStyle">
+            <option value="full_time">正社員</option>
+            <option value="part_time">パート・アルバイト</option>
+            <option value="contract">契約社員</option>
+            <option value="dispatch">派遣</option>
+          </select>
+        </div>
+
+        <div class="form-group">
+          <label for="shiftPref">希望シフト・時間帯</label>
+          <select id="shiftPref">
+            <option value="day">日勤のみ</option>
+            <option value="night">夜勤あり</option>
+            <option value="evening">夕方・夜</option>
+            <option value="flexible">柔軟に対応</option>
+          </select>
+        </div>
+
+        <div class="form-group">
+          <label for="hoursPerWeek">希望週労働時間（時間）</label>
+          <input type="number" id="hoursPerWeek" min="1" max="60" placeholder="例：40">
+        </div>
+
+        <div class="form-group full">
+          <label>保有資格</label>
+          <div class="checkbox-group">
+            <label><input type="checkbox" id="licCareWorker"> 介護福祉士</label>
+            <label><input type="checkbox" id="licCareManager"> ケアマネジャー</label>
+            <label><input type="checkbox" id="licSocialWorker"> 社会福祉士</label>
+          </div>
+        </div>
+
+        <div class="form-group full">
+          <label for="interviewText">面接AI解析テキスト</label>
+          <textarea id="interviewText"
+            placeholder="面接動画をAIで解析して得られたテキストを貼り付けてください。&#10;例）穏やかで落ち着いた印象。認知症への関心を語り、夜勤も積極的に対応可能と発言。共感力・傾聴姿勢が高評価。介護5年の経験あり…"
+            required></textarea>
+        </div>
+
+      </div>
+      <button type="submit" class="btn-submit" id="submitBtn">事業所適性を判定する</button>
+    </form>
+  </div>
+
+  <!-- ローディング -->
+  <div id="loading">
+    <div class="spinner"></div>
+    解析・マッチング処理中…
+  </div>
+
+  <!-- エラー -->
+  <div id="error-box"></div>
+
+  <!-- 結果 -->
+  <div id="result">
+    <div class="card">
+      <h2>判定結果</h2>
+      <div class="result-summary" id="summaryText"></div>
+      <div class="analysis-note" id="analysisNote"></div>
+      <div class="facility-list" id="facilityList"></div>
+    </div>
+  </div>
+
+</main>
+
+<script>
+const API_BASE = "";   // 同一オリジン
+
+document.getElementById("matchForm").addEventListener("submit", async (e) => {
+  e.preventDefault();
+  await runMatching();
+});
+
+async function runMatching() {
+  const name        = document.getElementById("name").value.trim();
+  const workStyle   = document.getElementById("workStyle").value;
+  const shiftPref   = document.getElementById("shiftPref").value;
+  const hoursRaw    = document.getElementById("hoursPerWeek").value;
+  const text        = document.getElementById("interviewText").value.trim();
+
+  if (!name || !text) return;
+
+  const body = {
+    candidate: {
+      name,
+      work_style: workStyle,
+      shift_preference: shiftPref,
+      has_care_worker_license:  document.getElementById("licCareWorker").checked,
+      has_care_manager_license: document.getElementById("licCareManager").checked,
+      has_social_worker_license:document.getElementById("licSocialWorker").checked,
+    },
+    interview_text: text,
+  };
+  if (hoursRaw) body.candidate.preferred_hours_per_week = Number(hoursRaw);
+
+  setLoading(true);
+  hideError();
+  hideResult();
+
+  try {
+    const res = await fetch(`${API_BASE}/matching/`, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify(body),
+    });
+    if (!res.ok) {
+      const err = await res.json().catch(() => ({}));
+      throw new Error(err.detail || `HTTP ${res.status}`);
+    }
+    const data = await res.json();
+    renderResult(data);
+  } catch (err) {
+    showError(err.message);
+  } finally {
+    setLoading(false);
+  }
+}
+
+function renderResult(data) {
+  document.getElementById("summaryText").textContent = data.summary;
+  document.getElementById("analysisNote").textContent = data.analysis_notes;
+
+  const list = document.getElementById("facilityList");
+  list.innerHTML = "";
+
+  data.recommended_facilities.forEach((f) => {
+    const rankClass = f.rank <= 3 ? `rank-${f.rank}` : "rank-other";
+    const card = document.createElement("div");
+    card.className = `facility-card ${rankClass}`;
+
+    const reasonsHtml = f.reasons.map(r =>
+      `<li>${escHtml(r)}</li>`
+    ).join("");
+    const cautionsHtml = f.cautions.map(c =>
+      `<li class="caution">${escHtml(c)}</li>`
+    ).join("");
+
+    card.innerHTML = `
+      <div class="fc-header">
+        <div class="rank-badge">${f.rank}</div>
+        <div class="fc-name">${escHtml(f.label)}</div>
+      </div>
+      <div class="score-bar-wrap">
+        <div class="score-bar-bg">
+          <div class="score-bar-fill" style="width:${f.score}%"></div>
+        </div>
+        <div class="score-label">${f.score}点</div>
+      </div>
+      <div class="fc-reasons">
+        <ul>
+          ${reasonsHtml}
+          ${cautionsHtml}
+        </ul>
+      </div>
+    `;
+    list.appendChild(card);
+  });
+
+  document.getElementById("result").style.display = "block";
+  document.getElementById("result").scrollIntoView({ behavior: "smooth" });
+}
+
+function setLoading(on) {
+  document.getElementById("loading").style.display = on ? "block" : "none";
+  document.getElementById("submitBtn").disabled = on;
+}
+function showError(msg) {
+  const el = document.getElementById("error-box");
+  el.textContent = `エラー: ${msg}`;
+  el.style.display = "block";
+}
+function hideError() { document.getElementById("error-box").style.display = "none"; }
+function hideResult() { document.getElementById("result").style.display = "none"; }
+function escHtml(s) {
+  return s.replace(/&/g,"&amp;").replace(/</g,"&lt;").replace(/>/g,"&gt;");
+}
+</script>
+</body>
+</html>
