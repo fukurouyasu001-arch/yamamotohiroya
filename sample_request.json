@@ -1,0 +1,37 @@
+{
+  "candidate": {
+    "name": "山田 花子",
+    "work_style": "full_time",
+    "shift_preference": "night",
+    "preferred_hours_per_week": 40,
+    "has_care_worker_license": true,
+    "has_care_manager_license": false,
+    "has_social_worker_license": false,
+    "commute_limit_minutes": 30,
+    "notes": "認知症の祖母の介護経験があります"
+  },
+  "video_analysis": {
+    "emotion": {
+      "calm": 0.88,
+      "empathy": 0.92,
+      "energy": 0.55,
+      "focus": 0.75,
+      "adaptability": 0.65,
+      "communication": 0.78
+    },
+    "speech": {
+      "transcript": "夜勤も積極的に入りたいと思っています。認知症の祖母を自宅で介護した経験があり、その方たちに寄り添うケアをしたいです。グループホームのような少人数の環境で、継続的に関係を築きながら働きたいです。",
+      "keywords": ["夜勤", "認知症", "グループホーム", "共同生活"],
+      "experience_years": null,
+      "mentioned_night_shift": true,
+      "mentioned_physical_care": false,
+      "mentioned_dementia": true,
+      "mentioned_disability": false,
+      "mentioned_group_living": true,
+      "mentioned_activity": false,
+      "confidence_score": 0.7
+    },
+    "video_duration_seconds": 420,
+    "analysis_confidence": 0.88
+  }
+}
