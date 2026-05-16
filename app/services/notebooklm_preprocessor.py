@@ -1,7 +1,7 @@
 """
 NotebookLM が出力するテキストの前処理。
 見出し・箇条書き・タイムスタンプを正規化して
-text_analyzer が扱いやすい自然文に変換する。
+解析エンジン が扱いやすい自然文に変換する。
 """
 import re
 
@@ -24,7 +24,7 @@ _SPEAKER_LABEL_PATTERN = re.compile(r"^(話者\w*|発言者|interviewer|intervie
 
 def preprocess(raw_text: str) -> str:
     """
-    NotebookLM テキストを text_analyzer 向けに正規化する。
+    NotebookLM テキストを 解析エンジン 向けに正規化する。
     見出し・箇条書き・タイムスタンプを除去し、連続した自然文に変換する。
     """
     text = raw_text

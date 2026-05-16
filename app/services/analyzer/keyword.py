@@ -1,14 +1,14 @@
 """
-面接AIテキストの解析サービス。
-キーワードマッチングと特性語彙スコアリングにより
-TraitProfile と TextFeatures を生成する。
+キーワード辞書ベースの解析エンジン（現状方式）。
+外部API不要。オフラインで動作する代わりに、文脈理解や否定形の検出は弱い。
+LLM接続前のフォールバック・PoC用途として残す。
 """
 import re
 from app.models.candidate import TraitProfile, TextFeatures, TextAnalysisResult
+from app.services.analyzer.base import AnalyzerEngine
 
 # ──────────────────────────────────────────
 # 特性スコア用キーワード辞書
-# 各キーワードにヒットするたびに重みを加算し、最終的に 0-1 に正規化する
 # ──────────────────────────────────────────
 _TRAIT_KEYWORDS: dict[str, list[tuple[str, float]]] = {
     "calm": [
@@ -43,7 +43,6 @@ _TRAIT_KEYWORDS: dict[str, list[tuple[str, float]]] = {
     ],
 }
 
-# 介護分野キーワード（フラグ抽出用）
 _CARE_KEYWORD_MAPS: dict[str, list[str]] = {
     "mentioned_night_shift": [
         "夜勤", "夜間", "泊まり", "ナイト", "深夜", "夜間勤務",
@@ -75,7 +74,6 @@ _CONFIDENCE_KEYWORDS = [
     "実績", "担当してきた", "任されて", "専門", "資格",
 ]
 
-# 特性スコアの飽和点（この重み合計で 1.0 とみなす）
 _SATURATION = 3.0
 
 
@@ -89,49 +87,47 @@ def _extract_experience_years(text: str) -> int | None:
     return int(m.group(1)) if m else None
 
 
-def analyze_text(interview_text: str) -> TextAnalysisResult:
-    """
-    面接AIテキストを解析して TraitProfile と TextFeatures を生成する。
-    """
-    # ── 特性スコア ──
-    trait = TraitProfile(
-        **{trait: _score_trait(interview_text, kws)
-           for trait, kws in _TRAIT_KEYWORDS.items()}
-    )
+class KeywordAnalyzer(AnalyzerEngine):
+    """キーワード辞書方式の解析エンジン。"""
 
-    # ── 介護分野フラグ ──
-    flag_values: dict[str, bool] = {
-        field: any(kw in interview_text for kw in kws)
-        for field, kws in _CARE_KEYWORD_MAPS.items()
-    }
+    name = "keyword"
 
-    # 自信度スコア
-    confidence_hits = sum(1 for kw in _CONFIDENCE_KEYWORDS if kw in interview_text)
-    confidence_score = min(confidence_hits / 3.0, 1.0)
+    def analyze(self, text: str) -> TextAnalysisResult:
+        trait = TraitProfile(
+            **{trait: _score_trait(text, kws)
+               for trait, kws in _TRAIT_KEYWORDS.items()}
+        )
 
-    # 経験年数
-    experience_years = _extract_experience_years(interview_text)
+        flag_values: dict[str, bool] = {
+            field: any(kw in text for kw in kws)
+            for field, kws in _CARE_KEYWORD_MAPS.items()
+        }
 
-    # 抽出キーワード
-    all_kws = [kw for kws in _CARE_KEYWORD_MAPS.values() for kw in kws]
-    keywords = [kw for kw in all_kws if kw in interview_text]
+        confidence_hits = sum(1 for kw in _CONFIDENCE_KEYWORDS if kw in text)
+        confidence_score = min(confidence_hits / 3.0, 1.0)
 
-    features = TextFeatures(
-        keywords=keywords,
-        experience_years=experience_years,
-        confidence_score=confidence_score,
-        **flag_values,
-    )
+        experience_years = _extract_experience_years(text)
 
-    # 解析信頼度: テキスト長と特性ヒット数から算出
-    hit_count = sum(1 for kws in _TRAIT_KEYWORDS.values()
-                    for kw, _ in kws if kw in interview_text)
-    text_length_factor = min(len(interview_text) / 200, 1.0)
-    hit_factor = min(hit_count / 10, 1.0)
-    analysis_confidence = round((text_length_factor * 0.5 + hit_factor * 0.5), 2)
+        all_kws = [kw for kws in _CARE_KEYWORD_MAPS.values() for kw in kws]
+        keywords = [kw for kw in all_kws if kw in text]
 
-    return TextAnalysisResult(
-        trait=trait,
-        features=features,
-        analysis_confidence=analysis_confidence,
-    )
+        features = TextFeatures(
+            keywords=keywords,
+            experience_years=experience_years,
+            confidence_score=confidence_score,
+            **flag_values,
+        )
+
+        hit_count = sum(1 for kws in _TRAIT_KEYWORDS.values()
+                        for kw, _ in kws if kw in text)
+        text_length_factor = min(len(text) / 200, 1.0)
+        hit_factor = min(hit_count / 10, 1.0)
+        analysis_confidence = round(
+            (text_length_factor * 0.5 + hit_factor * 0.5), 2
+        )
+
+        return TextAnalysisResult(
+            trait=trait,
+            features=features,
+            analysis_confidence=analysis_confidence,
+        )

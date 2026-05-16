@@ -1,14 +1,20 @@
 """
-マッチングロジックの単体テスト。
+マッチングロジックおよび解析エンジンの単体テスト。
 """
 import pytest
 from app.models.candidate import (
     CandidateConditions, CandidateProfile, WorkStyle, ShiftPreference,
 )
 from app.models.facility import FacilityType
-from app.services.text_analyzer import analyze_text
+from app.services.analyzer import get_analyzer
+from app.services.analyzer.keyword import KeywordAnalyzer
+from app.services.analyzer.llm import LLMAnalyzer
 from app.services.scorer import compute_score
 from app.services.matcher import run_matching
+
+
+# テスト全体で使う既定アナライザ（キーワード方式）
+_analyzer = KeywordAnalyzer()
 
 
 def _make_profile(
@@ -18,49 +24,62 @@ def _make_profile(
     interview_text="",
 ) -> CandidateProfile:
     candidate = CandidateConditions(name=name, work_style=work_style, shift_preference=shift)
-    analysis = analyze_text(interview_text)
+    analysis = _analyzer.analyze(interview_text)
     return CandidateProfile(candidate=candidate, analysis=analysis)
 
 
-# ── text_analyzer ────────────────────────────────
+# ── ファクトリ ────────────────────────────────────
+
+def test_factory_returns_keyword_analyzer_by_default():
+    analyzer = get_analyzer()
+    assert analyzer.name == "keyword"
+
+
+def test_llm_analyzer_raises_not_implemented():
+    llm = LLMAnalyzer(endpoint="http://localhost:11434", model="dummy", timeout=30)
+    with pytest.raises(NotImplementedError):
+        llm.analyze("テスト")
+
+
+# ── KeywordAnalyzer ───────────────────────────────
 
 def test_calm_trait_extracted_from_text():
-    result = analyze_text("穏やかで落ち着いた対応が得意です。冷静に判断できます。")
+    result = _analyzer.analyze("穏やかで落ち着いた対応が得意です。冷静に判断できます。")
     assert result.trait.calm >= 0.5
 
 
 def test_empathy_trait_extracted():
-    result = analyze_text("ご利用者に寄り添い共感を大切にしています。傾聴を心がけています。")
+    result = _analyzer.analyze("ご利用者に寄り添い共感を大切にしています。傾聴を心がけています。")
     assert result.trait.empathy >= 0.5
 
 
 def test_night_shift_flag_detected():
-    result = analyze_text("夜勤も積極的に入りたいと考えています。夜間の対応に慣れています。")
+    result = _analyzer.analyze("夜勤も積極的に入りたいと考えています。夜間の対応に慣れています。")
     assert result.features.mentioned_night_shift is True
 
 
 def test_dementia_flag_detected():
-    result = analyze_text("認知症の方のケアに関心があります。認知機能の低下に寄り添いたい。")
+    result = _analyzer.analyze("認知症の方のケアに関心があります。認知機能の低下に寄り添いたい。")
     assert result.features.mentioned_dementia is True
 
 
 def test_disability_flag_detected():
-    result = analyze_text("就労支援B型で障害のある方の支援をしていました。")
+    result = _analyzer.analyze("就労支援B型で障害のある方の支援をしていました。")
     assert result.features.mentioned_disability is True
 
 
 def test_activity_flag_detected():
-    result = analyze_text("レクリエーションや体操など活動支援が好きです。")
+    result = _analyzer.analyze("レクリエーションや体操など活動支援が好きです。")
     assert result.features.mentioned_activity is True
 
 
 def test_experience_years_extracted():
-    result = analyze_text("介護の仕事を5年続けてきました。")
+    result = _analyzer.analyze("介護の仕事を5年続けてきました。")
     assert result.features.experience_years == 5
 
 
 def test_empty_text_returns_low_confidence():
-    result = analyze_text("")
+    result = _analyzer.analyze("")
     assert result.analysis_confidence < 0.3
 
 
