@@ -52,7 +52,7 @@ def main():
 
     if all_invoices:
         output_path = os.path.join(output_folder, "invoices.xlsx")
-        excel_writer = ExcelWriter()
+        excel_writer = ExcelWriter(existing_file_path=output_path)
         excel_writer.process_and_save(all_invoices, output_path)
         print(f"\nProcessing complete! Total invoices extracted: {len(all_invoices)}")
     else:

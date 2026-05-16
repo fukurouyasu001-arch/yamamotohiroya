@@ -1,4 +1,5 @@
-from openpyxl import Workbook
+import os
+from openpyxl import Workbook, load_workbook
 from openpyxl.styles import Font, PatternFill, Alignment, Border, Side
 from openpyxl.utils import get_column_letter
 from datetime import datetime
@@ -7,9 +8,15 @@ from collections import defaultdict
 
 
 class ExcelWriter:
-    def __init__(self):
-        self.workbook = Workbook()
-        self.workbook.remove(self.workbook.active)
+    def __init__(self, existing_file_path: str = None):
+        if existing_file_path and os.path.exists(existing_file_path):
+            self.workbook = load_workbook(existing_file_path)
+            if self.workbook.sheetnames and self.workbook.sheetnames[0] == 'Sheet':
+                self.workbook.remove(self.workbook.active)
+            print(f"既存ファイルを開きました: {existing_file_path}")
+        else:
+            self.workbook = Workbook()
+            self.workbook.remove(self.workbook.active)
 
     def organize_by_month(self, invoices: List[Dict]) -> Dict[str, List[Dict]]:
         """Organize invoices by month (YYYY-MM)."""
@@ -32,6 +39,10 @@ class ExcelWriter:
 
     def add_month_sheet(self, month: str, invoices: List[Dict]):
         """Add a worksheet for a month with invoice data."""
+        if month in self.workbook.sheetnames:
+            del self.workbook[month]
+            print(f"既存シート '{month}' を削除しました")
+
         worksheet = self.workbook.create_sheet(title=month)
 
         headers = ['日付', '請求元', '金額', '内容', '消費税率', 'インボイス番号']
