@@ -13,8 +13,11 @@ class Settings(BaseSettings):
 
     # ── LLM 接続設定（"llm" モード時のみ使用） ──
     llm_endpoint: str = "http://localhost:11434"
-    llm_model: str = "llama3.1:8b"
-    llm_timeout_seconds: int = 60
+    # CPU で動く軽量モデル（PoC 用）。GPU があれば qwen2.5:14b などに変更
+    llm_model: str = "llama3.2:3b"
+    llm_timeout_seconds: int = 120
+    # LLM 失敗時にキーワード方式へ自動降格するか
+    llm_fallback_to_keyword: bool = True
 
     # ── DB ──
     database_url: str = "sqlite:///./matching.db"

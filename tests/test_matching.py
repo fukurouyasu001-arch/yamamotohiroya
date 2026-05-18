@@ -9,6 +9,7 @@ from app.models.facility import FacilityType
 from app.services.analyzer import get_analyzer
 from app.services.analyzer.keyword import KeywordAnalyzer
 from app.services.analyzer.llm import LLMAnalyzer
+import pytest
 from app.services.scorer import compute_score
 from app.services.matcher import run_matching
 
@@ -35,10 +36,11 @@ def test_factory_returns_keyword_analyzer_by_default():
     assert analyzer.name == "keyword"
 
 
-def test_llm_analyzer_raises_not_implemented():
-    llm = LLMAnalyzer(endpoint="http://localhost:11434", model="dummy", timeout=30)
-    with pytest.raises(NotImplementedError):
-        llm.analyze("テスト")
+def test_llm_analyzer_falls_back_when_ollama_unreachable():
+    """Ollama が起動していない場合、fallback=True ならキーワード方式で結果を返すこと。"""
+    llm = LLMAnalyzer(endpoint="http://localhost:11434", model="dummy", timeout=5, fallback=True)
+    result = llm.analyze("穏やかで認知症ケアに関心があります。")
+    assert result is not None
 
 
 # ── KeywordAnalyzer ───────────────────────────────

@@ -7,6 +7,7 @@ from fastapi.staticfiles import StaticFiles
 from app.db.database import init_db
 from app.api.matching import router as matching_router
 from app.api.records import router as records_router
+from app.api.health import router as health_router
 
 STATIC_DIR = Path(__file__).parent / "static"
 
@@ -31,6 +32,7 @@ def startup():
 
 app.include_router(matching_router)
 app.include_router(records_router)
+app.include_router(health_router)
 app.mount("/static", StaticFiles(directory=str(STATIC_DIR)), name="static")
 
 
